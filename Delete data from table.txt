@@ -1,0 +1,119 @@
+To delete records we can use DB facade with the delete method. To do so follow the below steps one by one:
+
+Step 1: Create Controller UserController by executing this command :
+	php artisan make:controller UserController
+
+Step 2: We can delete records in two ways.
+	-> First Method: The first is to delete direct using database command. 
+	Write following Code in App/Http/Controllers/UserController.php
+
+	<?php
+	namespace App\Http\Controllers;
+	use Illuminate\Http\Request;
+	use DB;
+	class UserController extends Controller {
+       public function index() 
+        	{
+         		 $users = DB::select('SELECT * FROM users');
+         		 return view('user', ['users'=>$users]);
+      	 }
+      	 public function destroy($id) 
+           {
+          		DB::delete('DELETE FROM users WHERE id = ?', [$id]);
+          		echo ("User Record deleted successfully.");
+          		return redirect()->route('users.index');
+       	}
+	}
+
+      -> Second Method: The second way is to delete using the Laravel delete Function and User Model (Easy one).
+
+		<?php
+			namespace App\Http\Controllers;
+			use Illuminate\Http\Request;
+		use App\User;
+			class UserController extends Controller {
+      		 public function index() 
+       			{
+       				   $users = User::All();
+          				return view('user', ['users'=>$users]);
+      			 }
+      		 public function destroy($id) 
+      		 {
+        			  $user = User::where('id', $id)->firstorfail()->delete();
+        			  echo ("User Record deleted successfully.");
+         			 return redirect()->route('users.index');
+      		 }
+			}
+
+Step 3: Implementation or Driver Code and create web routes for implementation of the above code in routes/web.php
+	<?php
+		Route::get('/user', 'UserController@index')->name('users.index');
+		Route::delete('/user/{id}', 'UserController@destroy')->name('users.destroy');
+	?>
+
+Step 4: Create a View File from where we display our users in resources/views directory name user.blade.php. Write following HTML code.
+
+	<!DOCTYPE html>
+	<html>
+
+	<head>
+		<title>Users Record</title>
+		<style type="text/css">
+			table {
+				color: #333;
+				font-family: sans-serif;
+				width: 640px;
+				border-collapse: collapse;
+				border-spacing: 0;
+			}
+		
+			td,
+			th {
+				border: 1px solid #CCC;
+				height: 30px;
+			}
+		
+			th {
+				background: #F3F3F3;
+				font-weight: bold;
+			}
+		
+			td {
+				background: #FAFAFA;
+				text-align: center;
+			}
+		</style>
+	</head>
+
+<body>
+	<table>
+		<tr>
+			<td>ID</td>
+			<td>Name</td>
+			<td>Email</td>
+			<td>Delete</td>
+		</tr>
+		@foreach ($users as $user)
+		<tr>
+			<td>{{ $user->id }}</td>
+			<td>{{ $user->name }}</td>
+			<td>{{ $user->email }}</td>
+			<td><a href="{{ route('users.index') }}"
+				onclick="event.preventDefault();
+					document.getElementById(
+					'delete-form-{{$user->id}}').submit();">
+				Delete
+				</a>
+			</td>
+			<form id="delete-form-{{$user->id}}"
+				+ action="{{route('users.destroy', $user->id)}}"
+				method="post">
+				@csrf @method('DELETE')
+			</form>
+		</tr>
+		@endforeach
+	</table>
+</body>
+
+</html>
+
